@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 p-4 text-white">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Student Dashboard</h1>
+            <a href="#" onclick="confirmLogout(event)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8">
+        <!-- Course List -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Course List</h2>
+            <div id="courseList" class="flex flex-wrap gap-2">
+                {% for course in courses %}
+                    <div class="flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                        <button onclick="showInstructor('{{ course[0] }}')">{{ course[1] }}</button>
+                        <button class="ml-2 bg-green-500 hover:bg-green-600 px-2 rounded" onclick="enrollInCourse('{{ course[0] }}')">Enroll</button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Enrolled Courses List -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Your Courses</h2>
+            <div id="enrolledCoursesList" class="flex flex-wrap gap-2">
+                {% for course in enrolled_courses %}
+                            <div class="flex items-center bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+                        {{ course.course_name }} - Instructor: {{ course.instructor_name }}
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 px-2 rounded" 
+                                onclick="viewStudentLogs('{{ course.course_id }}', '{{ course.course_name }}')">
+                            View Logs
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Instructor Info -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md" id="instructorInfo" style="display: none;">
+            <h2 class="text-xl font-semibold mb-4">Instructor Information</h2>
+            <p id="instructorName"></p>
+        </div>
+
+        <!-- Upload Your Images -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Upload Your Images</h2>
+            <form action="/upload_images" method="post" enctype="multipart/form-data">
+                <input type="file" name="images" accept="image/*" multiple>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mt-4">Upload Images</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function enrollInCourse(courseId) {
+            fetch(`/enroll_in_course/${courseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Enrolled successfully');
+                    location.reload();  // Reload the page to show the enrolled courses
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function showInstructor(courseId) {
+            fetch(`/get_instructor/${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('instructorInfo').style.display = 'block';
+                        document.getElementById('instructorName').innerText = 'Instructor: ' + data.instructor;
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+    
+        function confirmLogout(event) {
+            event.preventDefault(); // Prevent the default action
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "/logout"; // Proceed with logout if confirmed
+            }
+        }
+
+        function viewStudentLogs(courseId, courseName) {
+            fetch(`/student_logs/${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        let logContainer = document.createElement('div');
+                        logContainer.classList.add('p-6', 'rounded-lg', 'shadow-md', 'mt-8');
+
+                        let logTable = `
+                            <div class="container mx-auto mt-8 bg-white p-6 rounded-lg shadow-md">
+                                <h2 class="text-xl font-semibold mb-4">Your Attendance Logs for ${courseName}</h2>
+                                <table class="min-w-full table-auto">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-4 py-2">Session ID</th>
+                                            <th class="px-4 py-2">Session Date</th>
+                                            <th class="px-4 py-2">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        data.logs.forEach(log => {
+                            logTable += `
+                                <tr>
+                                    <td class="border px-4 py-2">${log[0]}</td>
+                                    <td class="border px-4 py-2">${log[1]}</td>
+                                 <td class="border px-4 py-2">${log[2]}</td>
+                                </tr>
+                            `;
+                        });
+
+                        logTable += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+
+                        logContainer.innerHTML = logTable;
+                        document.body.appendChild(logContainer);
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }  
+    </script>
+
+</body>
+</html>

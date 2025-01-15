@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Logs</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+    <style>
+        .attended {
+            background-color: #d4edda;
+            color: black;
+            border-left: 5px solid #10b981;
+        }
+
+        .absent {
+            background-color: #f8d7da;
+            color: black;
+            border-left: 5px solid #f44336;
+        }
+
+        .late {
+            background-color: #fff3cd;
+            color: black;
+            border-left: 5px solid #ff9800;
+        }
+
+        .out-of-class {
+            background-color: #e2e3e5;
+            color: black;
+            border-left: 5px solid #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 p-4 text-white">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Attendance System</h1>
+            <div class="flex items-center gap-4">
+                <a href="/dashboard" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Dashboard</a>
+                <a href="#" onclick="confirmLogout(event)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Attendance Logs Section -->
+    <div class="container mx-auto mt-8">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Attendance Logs for {{ course_name }}</h2>
+
+        {% if grouped_logs %}
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-4 py-2">Session ID</th>
+                            <th class="px-4 py-2">Session Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        {% for session_id, session_info in grouped_logs.items() %}
+                        <!-- Main Session Row -->
+                        <tr class="bg-gray-200 cursor-pointer" onclick="toggleSessionDetails('session-{{ session_id }}')">
+                            <td class="border px-4 py-2 text-center">
+                                <span class="inline-block bg-blue-500 text-white text-sm px-3 py-1 rounded-full">Session {{ session_id }}</span>
+                            </td>
+                            <td class="border px-4 py-2 text-center">{{ session_info.session_date }}</td>
+                        </tr>
+
+                        <!-- Hidden Logs for the Session -->
+                        <tr id="session-{{ session_id }}" class="hidden">
+                            <td colspan="2">
+                                <table class="table-auto w-full">
+                                    <thead class="bg-gray-300">
+                                        <tr>
+                                            <th class="px-4 py-2"></th> <!-- Add numbering column -->
+                                            <th class="px-4 py-2">Student Name</th>
+                                            <th class="px-4 py-2">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for log in session_info.logs %}
+                                        <tr class="{{ log.status|lower }}">
+                                            <td class="border px-4 py-2 text-center">{{ loop.index }}</td> <!-- Display the student number -->
+                                            <td class="border px-4 py-2 text-center">{{ log.student_name }}</td>
+                                            <td class="border px-4 py-2 text-center">{{ log.status }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        
+                                        <!-- Display session images -->
+                                        {% if session_info.images %}
+                                        <tr class="bg-gray-200">
+                                            <td colspan="3" class="border px-4 py-2 text-center font-semibold">
+                                                <h4>Captured Images:</h4>
+                                                <div class="flex justify-center space-x-4">
+                                                    {% for image_id in session_info.images %}
+                                                    <div>
+                                                        <a href="{{ url_for('view_image', image_id=image_id) }}" target="_blank">
+                                                            <img src="{{ url_for('view_image', image_id=image_id) }}" alt="Session Image" class="w-32 h-32 object-cover">
+                                                        </a>
+                                                        <p class="text-sm text-gray-600">
+                                                            {% if loop.index == 1 %}
+                                                                Image 1: Attended
+                                                            {% elif loop.index == 2 %}
+                                                                Image 2: Late
+                                                            {% elif loop.index == 3 %}
+                                                                Image 3: Out of Class
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Single Summary Row -->
+                                        <tr class="bg-gray-200">
+                                            <td colspan="4" class="border px-4 py-2 text-center font-semibold">
+                                                <span style="margin-right: 30px;">Total Attended: {{ session_info.logs | selectattr('status', 'equalto', 'attended') | list | length }}</span> | 
+                                                <span style="margin-right: 30px;">Total Absent: {{ session_info.logs | selectattr('status', 'equalto', 'absent') | list | length }}</span> | 
+                                                <span style="margin-right: 30px;">Total Late: {{ session_info.logs | selectattr('status', 'equalto', 'late') | list | length }}</span> | 
+                                                <span style="margin-right: 30px;">Total Out of Class: {{ session_info.logs | selectattr('status', 'equalto', 'out-of-class') | list | length }}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-red-500">No attendance records available for the selected course.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Confirm logout action
+        function confirmLogout(event) {
+            event.preventDefault();  // Prevent the default action
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "/logout";  // Proceed with logout if confirmed
+            }
+        }
+
+        // Function to toggle session details
+        function toggleSessionDetails(sessionId) {
+            const sessionRow = document.getElementById(sessionId);
+            if (sessionRow.classList.contains('hidden')) {
+                sessionRow.classList.remove('hidden');
+            } else {
+                sessionRow.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        /* Page background */
+        body {
+            background-color: #f0f2f5; /* A light gray for the overall page */
+        }
+
+        /* Section backgrounds and borders */
+        .section {
+            background-color: #ffffff; /* A softer white for sections */
+            border: 1px solid #d1d5db; /* Light gray border for separation */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            border-radius: 8px; /* Slight rounding of corners */
+            padding: 20px; /* More padding for better spacing */
+        }
+
+        /* Section headers */
+        h2 {
+            color: #1b1f25; /* Darker text for better readability */
+            margin-bottom: 1rem;
+        }
+
+        /* Card elements */
+        .card {
+            background-color: #ffffff; /* Matching section background with course list */
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        /* Update button styles */
+        .btn-primary {
+            background-color: #10b981; /* A stronger green for primary actions */
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #059669; /* Darker green on hover */
+        }
+
+        /* Custom hover effect for student list items */
+        .student-item:hover {
+            background-color: #cccfd1; /* Tailwind's gray-200 */
+            cursor: pointer; /* Show pointer cursor to indicate it's hoverable */
+        }
+
+        /* CSS for student status */
+        /* Present - Light green with dark green text */
+        /* Present - Keep text color black */
+        .attended {
+            background-color: #d4edda;
+            color: black;
+            border-left: 5px solid #10b981;
+        }
+
+        /* Absent - Keep text color black */
+        .absent {
+            background-color: #f8d7da;
+            color: black;
+            border-left: 5px solid #f44336;
+        }
+
+        /* Optional: Style late and out-of-class if necessary */
+        .late {
+            background-color: #fff3cd;
+            color: black;
+            border-left: 5px solid #ff9800;
+        }
+
+        .out-of-class {
+            background-color: #e2e3e5;
+            color: black;
+            border-left: 5px solid #6c757d;
+        }
+
+    </style>    
+</head>
+<body>
+    <nav class="bg-blue-600 p-4 text-white">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Attendance System</h1>
+            <div class="flex items-center gap-4">
+
+                <div id="feedback" style="font-weight: bold; color: rgb(255, 255, 255);"></div>
+
+                <input type="hidden" id="sessionId" value="">
+                <form id="startAttendanceForm" method="post" action="/start_attendance" onsubmit="return startAttendance(event)">
+                    <input type="hidden" id="selectedCourseId" name="course_id" value="">
+                    <button type="submit" class="btn-primary">
+                        Start Attendance Process
+                    </button>
+                </form>                 
+                <a href="#" onclick="confirmLogout(event)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</a>
+            </div>
+        </div>        
+    </nav>
+
+    <div class="container mx-auto mt-8">
+
+        <!-- Add Course Form -->
+            <form id="addCourseForm" class="mt-4 section">
+                <input type="text" id="courseName" class="w-full px-4 py-2 border rounded mb-2" placeholder="Course Name" required>
+                <button type="submit" class="btn-primary w-full">Add Course</button>
+            </form>
+
+        <!-- Course List -->
+            <div class="mt-8 mb-8 section">
+                <h2 class="text-xl font-semibold mb-4">Course List</h2>
+                <div id="courseList" class="flex flex-wrap gap-2">
+                    {% for course in courses %}
+                        <div class="flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                            <button type="button" onclick="selectCourse('{{ course[0] }}', this)">{{ course[1] }}</button>
+                            <button class="ml-2 bg-red-500 hover:bg-red-600 px-2 rounded" onclick="removeCourse('{{ course[0] }}')">X</button>
+                        </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="selectedCourseId" name="selected_course" value="">
+            </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Attendance Overview Card -->
+            <div class="card section">
+                <h2 class="text-xl font-semibold mb-4">Today's Attendance</h2>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <p class="text-3xl font-bold text-green-500" id="attendedCount">0</p>
+                        <p class="text-gray-600">Present</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-yellow-500" id="lateCount">0</p>
+                        <p class="text-gray-600">Late</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-red-500" id="absentCount">0</p>
+                        <p class="text-gray-600">Absent</p>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Attendance Chart Card -->
+            <div class="card section">
+                <h2 class="text-xl font-semibold mb-4">Attendance Trend</h2>
+                <canvas id="attendanceChart"></canvas>
+            </div>
+    
+            <!-- Quick Actions Card -->
+            <div class="card section">
+                <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+                <div class="flex flex-col space-y-4">
+                    <a href="#" class="btn-primary w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded text-center"
+                       onclick="checkCourseSelection('/attendance_logs')">View Full Report</a>
+    
+                    <a href="#" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded text-center"
+                       onclick="checkCourseSelection('/export_attendance_logs')">Export Data</a>
+    
+                    <a href="/settings" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded text-center">Settings</a>
+                </div>
+            </div>
+        </div>
+       
+        <!-- Student List Section -->
+        <div class="mt-8 section" style="grid-column: 1 / -1; padding: 30px;">
+            <h2 class="text-xl font-semibold mb-4">Students in Selected Course</h2>
+            <ul id="studentList" class="flex flex-col gap-2">
+                <!-- Student rows will be dynamically added here -->
+            </ul>
+
+            <!-- Action Buttons -->
+            <div class="flex">
+                <!-- Confirm Attendance Button -->
+                <button id="confirmAttendanceButton" class="btn-primary mt-4" onclick="confirmAttendance()" style="display: none;">
+                    Confirm Attendance
+                </button>
+
+                <!-- View Captured Images Button -->
+                <button id="viewImagesButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2 mt-4" 
+                        onclick="toggleCapturedImages()" style="display: none;">
+                    View Captured Images
+                </button>
+            </div>
+
+            <!-- Container for Captured Images, initially hidden -->
+            <div id="captured-images-container" class="hidden mt-6">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Captured Images</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for image_id in captured_images %}
+                    <div class="flex flex-col items-center">
+                        <a href="{{ url_for('view_image', image_id=image_id) }}" target="_blank" class="block">
+                        <img src="{{ url_for('view_image', image_id=image_id) }}" alt="Session Image" class="w-32 h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300" />
+                        </a>
+                        {% if loop.index == 1 %}
+                        <p class="mt-2 text-sm text-gray-600">Image 1: Attended</p>
+                        {% elif loop.index == 2 %}
+                        <p class="mt-2 text-sm text-gray-600">Image 2: Late</p>
+                        {% elif loop.index == 3 %}
+                        <p class="mt-2 text-sm text-gray-600">Image 3: Out of Class</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        function checkCourseSelection(url) {
+            const selectedCourseId = document.getElementById('selectedCourseId').value;
+            if (!selectedCourseId) {
+                alert('Please select a course before proceeding.');
+            } else {
+                window.location.href = url;
+            }
+        }
+    </script>
+    
+    </div>
+
+    <script>
+        // Add a course
+        document.getElementById('addCourseForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const courseName = document.getElementById('courseName').value;
+    
+            fetch('/add_course', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: courseName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Add the new course to the course list
+                    const courseList = document.getElementById('courseList');
+                    const newCourse = `
+                        <div class="flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                            <button onclick="selectCourse('${data.course_id}', this)">${courseName}</button>
+                            <button class="ml-2 bg-red-500 hover:bg-red-600 px-2 rounded" onclick="removeCourse('${data.course_id}')">X</button>
+                        </div>
+                    `;
+                    courseList.innerHTML += newCourse;
+                    // Clear the form
+                    document.getElementById('courseName').value = '';
+                } else {
+                    alert(data.message);  // Show error message
+                }
+            });
+        });
+    
+        // Select a course and display students
+        function selectCourse(courseId, element) {
+            // Set the selected course ID in the hidden input
+            document.getElementById('selectedCourseId').value = courseId;
+
+            // Highlight the selected course
+            const buttons = document.querySelectorAll('#courseList div');
+            buttons.forEach(div => {
+                div.classList.remove('bg-green-500');
+                div.classList.add('bg-blue-500');
+            });
+
+            // Apply the green background to the selected course button
+            element.parentElement.classList.remove('bg-blue-500');
+            element.parentElement.classList.add('bg-green-500');
+
+            // Send the selected course to the backend
+            fetch('/select_course', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ courseId: courseId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Course selected successfully');
+                } else {
+                    console.log('Error selecting course:', data.message);
+                }
+            });
+
+            // Fetch and display students in the selected course
+            showStudents(courseId);  // Pass the correct courseId here
+        }
+
+        // Show students in the selected course
+        function showStudents(courseId) {
+            fetch(`/students_in_course/${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const studentList = document.getElementById('studentList');
+                    studentList.innerHTML = '';
+                    data.forEach((student, index) => {
+                        const li = document.createElement('li');
+                        li.className = "flex items-center justify-between p-2 border-b border-gray-200 student-item rounded";
+                        li.setAttribute('data-student-id', student.id);  // Add data attribute for student ID
+
+                        // Add the dropdown for selecting status and bind it with the event listener
+                        li.innerHTML = `
+                            <span class="font-bold">${index + 1}.</span>
+                            <span class="flex-1 ml-2">${student.name}</span>
+                            <button class="ml-2 bg-red-500 hover:bg-red-600 px-2 rounded" onclick="removeStudent(${student.id}, ${courseId})">X</button>
+                        `;
+                
+                        studentList.appendChild(li);
+                    });
+
+                    // Add the event listener for the dropdowns to dynamically update counts
+                    attachDropdownListeners();
+                });
+        }
+    
+        // Remove a course
+        function removeCourse(courseId) {
+            if (confirm('Are you sure you want to remove this course?')) {
+                fetch(`/remove_course/${courseId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Remove the course from the course list
+                            const courseElement = document.querySelector(`#courseList div button[onclick="selectCourse('${courseId}')"]`).parentElement;
+                            courseElement.remove();
+                        } else {
+                            alert(data.message);  // Show error message
+                        }
+                    });
+            }
+        }
+    
+        // Remove a student from a course
+        function removeStudent(studentId, courseId) {
+            if (confirm('Are you sure you want to remove this student from the course?')) {
+                fetch(`/remove_student/${studentId}/${courseId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Remove the student from the student list
+                            showStudents(courseId);
+                        } else {
+                            alert(data.message);  // Show error message
+                        }
+                    });
+            }
+        }
+    
+        var socket = io();
+
+        // Listen for feedback events from the server
+        socket.on('feedback', function(data) {
+            // Display the feedback message to the user
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.innerText = data.message;
+        });
+
+        function startAttendance(event) {
+            const selectedCourseId = document.getElementById('selectedCourseId').value;
+            if (!selectedCourseId) {
+                alert('Please select a course first.');
+                return false;
+            }
+
+            event.preventDefault();
+            fetch('/start_attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ course_id: selectedCourseId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the counts and other elements as before
+                    document.getElementById('attendedCount').innerText = data.attended_count;
+                    document.getElementById('lateCount').innerText = data.late_count;
+                    document.getElementById('absentCount').innerText = data.absent_count + data.out_of_class_count;
+                    updateStudentList({
+                        "Attended": data.attended,
+                        "Late": data.late,
+                        "Absent": data.absent,
+                        "Out-of-class": data.out_of_class
+                    });
+                    document.getElementById('sessionId').value = data.session_id;
+                    document.getElementById('confirmAttendanceButton').style.display = 'block';
+                    document.getElementById('viewImagesButton').style.display = 'block';
+                    fetchCapturedImages(data.session_id);
+                } else {
+                    alert('Failed to start attendance process.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateStudentList(classifiedResults) {
+            if (!classifiedResults) {
+                console.error("Classified Results is undefined or null");
+                return;
+            }
+
+            const attended = classifiedResults["Attended"] || [];
+            const late = classifiedResults["Late"] || [];
+            const absent = classifiedResults["Absent"] || [];
+            const outOfClass = classifiedResults["Out-of-class"] || [];
+
+            console.log("Attended:", attended);
+            console.log("Late:", late);
+            console.log("Absent:", absent);
+            console.log("Out-of-class:", outOfClass);
+
+            attended.forEach(studentId => {
+                const row = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (row) {
+                    row.classList.remove('absent', 'late', 'out-of-class');
+                    row.classList.add('attended');
+                    const deleteButton = row.querySelector('button');
+                    if (deleteButton) {
+                        deleteButton.remove();
+                    }
+                    row.innerHTML += `
+                        <select class="status-dropdown" data-student-id="${studentId}">
+                            <option value="attended" selected>Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                            <option value="out_of_class">Out of Class</option>
+                        </select>
+                    `;
+                    // Attach the event listener for the dropdown to update counts
+                    row.querySelector('.status-dropdown').addEventListener('change', updateAttendanceCounts);
+                }
+            });
+
+            absent.forEach(studentId => {
+                const row = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (row) {
+                    row.classList.remove('attended', 'late', 'out-of-class');
+                    row.classList.add('absent');
+                    const deleteButton = row.querySelector('button');
+                    if (deleteButton) {
+                        deleteButton.remove();
+                    }
+                    row.innerHTML += `
+                        <select class="status-dropdown" data-student-id="${studentId}">
+                            <option value="attended">Present</option>
+                            <option value="absent" selected>Absent</option>
+                            <option value="late">Late</option>
+                            <option value="out_of_class">Out of Class</option>
+                        </select>
+                    `;
+                    // Attach the event listener for the dropdown to update counts
+                    row.querySelector('.status-dropdown').addEventListener('change', updateAttendanceCounts);
+                }
+            });
+
+            late.forEach(studentId => {
+                const row = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (row) {
+                    row.classList.remove('attended', 'absent', 'out-of-class');
+                    row.classList.add('late');
+                    const deleteButton = row.querySelector('button');
+                    if (deleteButton) {
+                        deleteButton.remove();
+                    }
+                    row.innerHTML += `
+                        <select class="status-dropdown" data-student-id="${studentId}">
+                            <option value="attended">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late" selected>Late</option>
+                            <option value="out_of_class">Out of Class</option>
+                        </select>
+                    `;
+                    // Attach the event listener for the dropdown to update counts
+                    row.querySelector('.status-dropdown').addEventListener('change', updateAttendanceCounts);
+                }
+            });
+
+            outOfClass.forEach(studentId => {
+                const row = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (row) {
+                    row.classList.remove('attended', 'absent', 'late');
+                    row.classList.add('out-of-class');
+                    const deleteButton = row.querySelector('button');
+                    if (deleteButton) {
+                        deleteButton.remove();
+                    }
+                    row.innerHTML += `
+                        <select class="status-dropdown" data-student-id="${studentId}">
+                            <option value="attended">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                            <option value="out_of_class" selected>Out of Class</option>
+                        </select>
+                    `;
+                    // Attach the event listener for the dropdown to update counts
+                    row.querySelector('.status-dropdown').addEventListener('change', updateAttendanceCounts);
+                }
+            });
+
+            // Show the confirm attendance button after updating the student list
+            document.getElementById('confirmAttendanceButton').style.display = 'block';
+        }
+
+        function updateStudentStatus(attendanceResults) {
+            // Clear existing classes
+            document.querySelectorAll('.student-item').forEach(item => {
+                item.classList.remove('attended', 'absent', 'late', 'out-of-class');
+            });
+
+            // Update each student based on the results
+            attendanceResults.attended.forEach(studentId => {
+                const studentRow = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (studentRow) {
+                    studentRow.classList.add('attended');
+                }
+            });
+
+            attendanceResults.absent.forEach(studentId => {
+                const studentRow = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (studentRow) {
+                    studentRow.classList.add('absent');
+                }
+            });
+
+            attendanceResults.late.forEach(studentId => {
+                const studentRow = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (studentRow) {
+                    studentRow.classList.add('late');
+                }
+            });
+
+            attendanceResults.out_of_class.forEach(studentId => {
+                const studentRow = document.querySelector(`[data-student-id="${studentId}"]`);
+                if (studentRow) {
+                    studentRow.classList.add('out-of-class');
+                }
+            });
+        }
+
+        function startAttendanceProcess() {
+            fetch('/start_attendance', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the student list with attendance results
+                    updateStudentStatus({
+                        attended: data.attended,
+                        late: data.late,
+                        absent: data.absent,
+                        out_of_class: data.out_of_class
+                    });
+                } else {
+                    console.error('Attendance process failed:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateAttendanceCounts() {
+            let attendedCount = 0, lateCount = 0, absentCount = 0;
+
+            document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+                const status = dropdown.value;
+                const row = dropdown.closest('.student-item');
+
+                // Update the counts based on the current selection in the dropdown
+                if (status === 'attended') {
+                    attendedCount++;
+                    // Change the row's background color to green for present
+                    row.classList.remove('absent', 'late', 'out-of-class');
+                    row.classList.add('attended');
+                } else if (status === 'late') {
+                    lateCount++;
+                    // Change the row's background color to yellow for late
+                    row.classList.remove('attended', 'absent', 'out-of-class');
+                    row.classList.add('late');
+                } else if (status === 'absent') {
+                    absentCount++;
+                    // Change the row's background color to red for absent
+                    row.classList.remove('attended', 'late', 'out-of-class');
+                    row.classList.add('absent');
+                } else if (status === 'out_of_class') {
+                    // Change the row's background color to grey for out-of-class
+                    row.classList.remove('attended', 'late', 'absent');
+                    row.classList.add('out-of-class');
+                }
+            });
+
+            // Update the "Today's Attendance" counts in the UI
+            document.getElementById('attendedCount').innerText = attendedCount;
+            document.getElementById('lateCount').innerText = lateCount;
+            document.getElementById('absentCount').innerText = absentCount;
+        }
+
+        function attachDropdownListeners() {
+            // Attach an event listener to each dropdown to handle manual changes
+            document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+                dropdown.addEventListener('change', updateAttendanceCounts);
+            });
+        }
+
+        function confirmAttendance() {
+            const statusUpdates = [];
+    
+            // Collect the updated statuses from the dropdowns
+            document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+                const studentId = dropdown.getAttribute('data-student-id');
+                const status = dropdown.value;
+                statusUpdates.push({ studentId, status });
+            });
+
+            // Get the selected course and session IDs
+            const courseId = document.getElementById('selectedCourseId').value;
+            const sessionId = document.getElementById('sessionId').value;
+
+            if (!sessionId || !courseId) {
+                alert("Session ID or Course ID missing!");
+                return;
+            }
+
+            // Send the status updates along with course_id and session_id to the server
+            fetch('/confirm_attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ updates: statusUpdates, course_id: courseId, session_id: sessionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Attendance successfully updated!');
+                } else {
+                    alert('Failed to update attendance.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Confirm logout action
+        function confirmLogout(event) {
+            event.preventDefault(); // Prevent the default action
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "/logout"; // Proceed with logout if confirmed
+            }
+        }
+
+        // Toggle visibility of the captured images
+        function toggleCapturedImages() {
+            console.log('Button clicked');  // Add this line to check if the function is triggered
+
+            const container = document.getElementById('captured-images-container');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function fetchCapturedImages(sessionId) {
+            // Fetch captured images for the given session
+            fetch(`/get_captured_images/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('captured-images-container');
+                    const imagesContainer = document.createElement('div');
+                    imagesContainer.classList.add('flex', 'flex-wrap', 'justify-center', 'space-x-4', 'space-y-4');
+
+                    data.captured_images.forEach((image_id, index) => {
+                        const imageElement = document.createElement('div');
+                        imageElement.classList.add('flex', 'flex-col', 'items-center');
+
+                        const imageLink = document.createElement('a');
+                        imageLink.href = `/view_image/${image_id}`;
+                        imageLink.target = '_blank';
+
+                        const img = document.createElement('img');
+                        img.src = `/view_image/${image_id}`;
+                        img.alt = 'Session Image';
+                        img.classList.add('w-32', 'h-32', 'object-cover');
+                        imageLink.appendChild(img);
+                        imageElement.appendChild(imageLink);
+
+                        const caption = document.createElement('p');
+                        caption.classList.add('text-sm', 'text-gray-600');
+                        caption.textContent =
+                            index === 0
+                                ? 'Image 1: Attended'
+                                : index === 1
+                                ? 'Image 2: Late'
+                                : 'Image 3: Out of Class';
+                        imageElement.appendChild(caption);
+
+                        imagesContainer.appendChild(imageElement);
+                    });
+
+                    container.innerHTML = '';
+                    container.appendChild(imagesContainer);
+                })
+                .catch(error => console.error('Error fetching images:', error));
+        }
+
+    </script>    
+
+</body>
+</html>
