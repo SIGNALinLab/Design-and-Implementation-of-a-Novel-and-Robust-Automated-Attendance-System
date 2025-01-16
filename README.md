@@ -9,7 +9,7 @@ This repository contains the codebase for an automated attendance system built w
 
 2. You have to install the following libraries:
 
->- Python v3.9.
+> Python v3.9.
 
 >- io (from BytesIO).
 
