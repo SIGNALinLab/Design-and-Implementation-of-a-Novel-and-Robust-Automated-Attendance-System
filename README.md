@@ -64,7 +64,7 @@ To integrate your camera with the script for capturing input images, follow the 
 
 **Please ensure that you have updated your camera's URL and session ID before executing the script. This will allow the script to access your camera feed and function as intended.**
 
-## Codes explanation
+## Codes Explanation
 
 Now we will explain each code. What is the purpose of it and what is the key lines yo have to modify, so the code work properly in your computer.
 
