@@ -108,6 +108,7 @@ If you need access or would like to work with the system during this period, ple
 
 ## Citation
 If you find our proposed system useful in your research, please consider to cite:
+
 	@InProceedings{Al-Omayrini_CC2025,
 	  title = {Design and Implementation of a Novel and Robust Automated Attendance System},
 	  author = {Al-Omayrini, Abdullah and Alqifari, Abdulmalik and Osman, Tawfeeq and Alzaid, Abdulmalik and Alorf, Abdulaziz},
