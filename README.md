@@ -93,7 +93,7 @@ The *`yolo_detect5.py`* script integrates YOLOv8 for detecting persons in an ima
 
 ### HTML folder
 
-It consists of 5 html codes each one of them plays an important role in shaping the friendly user-interface and enhancing the overall user experience.
+It consists of 5 html codes, each one of which plays an important role in shaping the friendly user interface and enhancing the overall user experience.
 
 ## Database
 
