@@ -5,7 +5,7 @@ This repository contains the codebase for an automated attendance system built w
 
 ## Requirements
 
-1. You need a camera to connect it with the code, so that the code can take the input image from it.
+1. You need a camera to connect it with the code so that the code can take the input image from it.
 
 2. You have to install the following libraries:
 
@@ -37,7 +37,7 @@ This repository contains the codebase for an automated attendance system built w
   
 >- onnxruntime.
 
-3. You have to Download the following models:
+3. You have to download the following models:
 
 >- Download the "yolov8x.pt" model from the official Ultralytics website [here](https://docs.ultralytics.com/models/yolov8/#performance-metrics) and save it in the project directory.
   
