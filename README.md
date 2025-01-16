@@ -66,7 +66,7 @@ To integrate your camera with the script for capturing input images, follow the 
 
 ## Codes Explanation
 
-Now we will explain each code. What is the purpose of it and what is the key lines yo have to modify, so the code work properly in your computer.
+Now, we will explain each code: What is its purpose, and what are the key lines you have to modify so the code works properly on your computer?
 
 ### AAS_Program.py
 This is the main script for the system.
