@@ -85,7 +85,7 @@ The *`db_operations12.py`* script is a comprehensive utility for managing databa
 
 ### v18.py
 
-The *`v18.py`* script is a key component of the automated attendance system, responsible for facial recognition and classification. It uses InsightFace to analyze images, extract embeddings, and match them with pre-stored course-specific embeddings. The script classifies students into categories like attended, late, absent, and out-of-class based on their presence across three images taken during a session. It includes preprocessing methods such as CLAHE for image enhancement and duplicate detection to avoid redundant processing. Additionally, it supports dynamic updates for face recognition thresholds and saves recognized faces with bounding boxes drawn for visual validation.
+The *`v18.py`* script is a key component of the automated attendance system responsible for facial recognition and classification. It uses InsightFace to analyze images, extract embeddings, and match them with pre-stored course-specific embeddings. The script classifies students into categories like attended, late, absent, and out-of-class based on their presence across three images taken during a session. It includes preprocessing methods such as CLAHE for image enhancement and duplicate detection to avoid redundant processing. Additionally, it supports dynamic updates for face recognition thresholds and saves recognized faces with bounding boxes drawn for visual validation.
 
 ### yolo_detect5.py
 
