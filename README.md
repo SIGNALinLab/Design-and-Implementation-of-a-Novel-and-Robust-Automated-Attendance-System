@@ -1,4 +1,4 @@
-# Novel-Robust-AutomatedAttendanceSystem
+# Design and Implementation of a Novel and Robust Automated Attendance System
 
 This repository contains the codebase for an automated attendance system built with Python and Flask. The system leverages face recognition and advanced image processing techniques to capture, analyze, and record attendance for classroom sessions. It includes features for instructor and student roles, allowing instructors to manage courses, enroll students, and review attendance logs, while students can upload their images for recognition. The project integrates a MySQL database for storing attendance records, course details, and user data. Additionally, the system employs YOLO-based object detection and RetinaFace for face detection, ESRGAN for image enhancement, and advanced algorithms for classifying student attendance dynamically across multiple session images. This repository serves as a robust solution for streamlining attendance management in academic or professional environments.
 
