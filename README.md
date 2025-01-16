@@ -106,4 +106,11 @@ Currently, the database for this project is hosted on our local system, and we a
 ## Need Assistance
 If you need access or would like to work with the system during this period, please feel free to contact us at Abdullah.Ali.4@hotmail.com, Abdulmalikqifari@gmail.com, t.osman8@outlook.com, or Abdulmalik.zd4@gmail.com, and we will ensure the database is available for your use.
 
-
+## Citation
+If you find our proposed system useful in your research, please consider to cite:
+	@InProceedings{Al-Omayrini_CC2025,
+	  title = {Design and Implementation of a Novel and Robust Automated Attendance System},
+	  author = {Al-Omayrini, Abdullah and Alqifari, Abdulmalik and Osman, Tawfeeq and Alzaid, Abdulmalik and Alorf, Abdulaziz},
+	  booktitle = {The 13th Springer Computing Conference (CC)},
+	  year = {2025}
+	}
