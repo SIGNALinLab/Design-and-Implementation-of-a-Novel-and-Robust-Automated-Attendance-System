@@ -73,7 +73,7 @@ This is the main script for the system.
 
 ### aasfinal7.py
 
-The *`aasfinal7.py`* script facilitates automated image capture during a session using a network camera. It controls the camera's flashlight via an API and captures three images at predefined intervals: the first after a fixed time, the second after an additional interval, and the third at a random time before the session ends. The script uses OpenCV to stream video from the camera and save captured frames as images, ensuring proper lighting by activating the flashlight before each capture. This script is a critical component for gathering visual data in the automated attendance system.
+The *`aasfinal7.py`* script facilitates automated image capture during a session using a network camera. It controls the camera's flashlight via an API. It captures three images at predefined intervals: the first after a fixed time, the second after an additional interval, and the third at a random time before the session ends. The script uses OpenCV to stream video from the camera and save captured frames as images, ensuring proper lighting by activating the flashlight before each capture. This script is a critical component for gathering visual data in the automated attendance system.
 
 ### CoursesEmb3.py
 
