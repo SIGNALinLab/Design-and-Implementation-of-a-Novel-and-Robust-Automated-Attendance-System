@@ -103,8 +103,9 @@ By using MySQL library, we created a database to save the images of each student
 
 Currently, the database for this project is hosted on our local system, and we are the sole hosts. At this time, we cannot migrate the database to other platforms, such as Oracle Cloud Free Tier or a local setup for independent users. However, this transition is planned to take place in the coming days. Until then, the database will only be accessible when we manually start the service.
 
-## Need Assistance
-If you need access or would like to work with the system during this period, please feel free to contact us at Abdullah.Ali.4@hotmail.com, Abdulmalikqifari@gmail.com, t.osman8@outlook.com, or Abdulmalik.zd4@gmail.com, and we will ensure the database is available for your use.
+## Contact
+
+If you have any questions or suggestions, please reach out to the project team at contact@signalinlab.ai
 
 ## Citation
 If you find our proposed system useful in your research, please consider to cite:
