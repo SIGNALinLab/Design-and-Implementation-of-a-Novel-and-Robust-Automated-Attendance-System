@@ -103,10 +103,6 @@ By using MySQL library, we created a database to save the images of each student
 
 Currently, the database for this project is hosted on our local system, and we are the sole hosts. At this time, we cannot migrate the database to other platforms, such as Oracle Cloud Free Tier or a local setup for independent users. However, this transition is planned to take place in the coming days. Until then, the database will only be accessible when we manually start the service.
 
-## Contact
-
-If you have any questions or suggestions, please reach out to the project team at contact@signalinlab.ai
-
 ## Citation
 If you find our proposed system useful in your research, please consider to cite:
 
@@ -117,3 +113,26 @@ If you find our proposed system useful in your research, please consider to cite
  booktitle = {The 13th Springer Computing Conference (CC)},
  year = {2025}
 }
+```
+
+## License & Academic Use
+
+This project is licensed under **PolyForm Noncommercial 1.0.0** (see `LICENSE`).
+
+### What you may do (noncommercial)
+For **noncommercial** purposes (as defined by the license), you may use, copy, modify, and distribute this software in compliance with the license terms.
+
+### Commercial use
+Commercial use is **not** permitted under this license. If you want to use this software commercially, contact us to discuss licensing.
+
+### Academic publications & sharing policy (request)
+You are welcome to publish papers, reports, and results that use this software. To avoid “as-is” republication of the code in academic venues, please:
+
+- **Cite the project** (see “How to cite” above).
+- If a venue requires code availability, **link to this repository** rather than embedding or re-hosting the full source as supplementary material.
+- If you need to provide code to reviewers, prefer a private link/fork or a reference to a tagged release in this repo.
+- If you believe your venue requires bundling or archiving substantial portions of the source code outside GitHub, **contact us** and we’ll help find a compliant approach.
+
+## Contact
+
+If you have any questions or suggestions, please reach out to the project team at contact@signalinlab.ai
