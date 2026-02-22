@@ -2,6 +2,7 @@
 
 This repository contains the codebase for an automated attendance system built with Python and Flask. The system leverages computer vision and advanced image processing techniques to record attendance and track students to ensure their presence throughout the whole class session. It includes features for instructor and student roles, allowing instructors to manage courses, enroll students, and review attendance logs while students can upload their images for recognition. The project integrates a MySQL database for storing attendance records, course details, and user data. Additionally, the system employs YOLO-based object detection and RetinaFace for face detection, ESRGAN for image enhancement, and advanced algorithms for classifying student attendance dynamically across multiple captured images during the class. This repository serves as a robust solution for streamlining attendance management in academic or professional environments. It also can be generalized for non-educational environments.
 
+---
 
 ## Requirements
 
@@ -42,7 +43,8 @@ This repository contains the codebase for an automated attendance system built w
 >- Download the "yolov8x.pt" model from the official Ultralytics website [here](https://docs.ultralytics.com/models/yolov8/#performance-metrics) and save it in the project directory.
   
 >- Download the ESRGAN model from its official GitHub repository [here](https://github.com/xinntao/ESRGAN/tree/master) and place its folder within the project directory. Next, download the pre-trained model "RRDB_ESRGAN_x4.pth" and save it in the (/ESRGAN/models) directory.
-  
+
+---
 
 ## Integrating Your Camera with the Script
 
@@ -63,6 +65,8 @@ To integrate your camera with the script for capturing input images, follow the 
    - Find your session ID in the network activity logs and copy it.
 
 **Please ensure that you have updated your camera's URL and session ID before executing the script. This will allow the script to access your camera feed and function as intended.**
+
+---
 
 ## Codes Explanation
 
@@ -95,6 +99,8 @@ The *`yolo_detect5.py`* script integrates YOLOv8 for detecting persons in an ima
 
 It consists of 5 html codes, each one of which plays an important role in shaping the friendly user interface and enhancing the overall user experience.
 
+---
+
 ## Database
 
 By using MySQL library, we created a database to save the images of each student, where they can upload images by entering the student user interface and uploading the desired images. These images are saved in a pkl-file folder, and the results of the attendance process are saved in pkl-file folder and on the user interface.
@@ -102,6 +108,8 @@ By using MySQL library, we created a database to save the images of each student
 ### Database Hosting Status
 
 Currently, the database for this project is hosted on our local system, and we are the sole hosts. At this time, we cannot migrate the database to other platforms, such as Oracle Cloud Free Tier or a local setup for independent users. However, this transition is planned to take place in the coming days. Until then, the database will only be accessible when we manually start the service.
+
+---
 
 ## Citation
 If you find our proposed system useful in your research, please consider to cite:
@@ -114,6 +122,8 @@ If you find our proposed system useful in your research, please consider to cite
  year = {2025}
 }
 ```
+
+---
 
 ## License & Academic Use
 
@@ -132,6 +142,8 @@ You are welcome to publish papers, reports, and results that use this software. 
 - If a venue requires code availability, **link to this repository** rather than embedding or re-hosting the full source as supplementary material.
 - If you need to provide code to reviewers, prefer a private link/fork or a reference to a tagged release in this repo.
 - If you believe your venue requires bundling or archiving substantial portions of the source code outside GitHub, **contact us** and we’ll help find a compliant approach.
+
+---
 
 ## Contact
 
